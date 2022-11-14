@@ -1,4 +1,4 @@
-package domain_service
+package service
 
 import (
 	"github.com/google/uuid"
@@ -48,4 +48,16 @@ func (ptr *UserHolder) GetAllUsers() []*domain.UserProfile {
 	}
 
 	return allUsers
+}
+
+func (ptr *UserHolder) DeleteUserByUsername(username string) bool {
+	ptr.mutex.Lock()
+	defer ptr.mutex.Unlock()
+
+	if _, exists := ptr.users[username]; exists {
+		delete(ptr.users, username)
+		return true
+	}
+
+	return false
 }

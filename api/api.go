@@ -3,14 +3,14 @@ package api
 import (
 	"encoding/json"
 	"github.com/gorilla/mux"
-	"github.com/mstepan/user-service-golang/domain_service"
+	"github.com/mstepan/user-service-golang/domain/service"
 	"github.com/mstepan/user-service-golang/utils/http_utils"
 	"net/http"
 )
 
 const contextPath = "/api/v1"
 
-var userHolder = domain_service.NewUserHolder()
+var userHolder = service.NewUserHolder()
 
 func NewRouting() *mux.Router {
 	// configure all routing here
@@ -26,6 +26,10 @@ func NewRouting() *mux.Router {
 
 	routing.HandleFunc(contextPath+"/users/{username:[a-zA-Z][\\w-]{1,31}}", getUserByUsername).
 		Methods("GET").
+		Schemes("http")
+
+	routing.HandleFunc(contextPath+"/users/{username:[a-zA-Z][\\w-]{1,31}}", deleteUserByUsername).
+		Methods("DELETE").
 		Schemes("http")
 
 	return routing
@@ -73,4 +77,17 @@ func getUserByUsername(respWriter http.ResponseWriter, req *http.Request) {
 	}
 
 	http_utils.WriteJsonBody(respWriter, http.StatusOK, userProfile)
+}
+
+func deleteUserByUsername(respWriter http.ResponseWriter, req *http.Request) {
+	vars := mux.Vars(req)
+
+	wasDeleted := userHolder.DeleteUserByUsername(vars["username"])
+
+	if wasDeleted {
+		respWriter.WriteHeader(http.StatusNoContent)
+		return
+	}
+
+	respWriter.WriteHeader(http.StatusNotFound)
 }
