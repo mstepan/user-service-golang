@@ -2,7 +2,6 @@ package domain_service
 
 import (
 	"github.com/google/uuid"
-	"github.com/mstepan/user-service-golang/api"
 	"github.com/mstepan/user-service-golang/domain"
 	"sync"
 )
@@ -16,17 +15,17 @@ func NewUserHolder() *UserHolder {
 	return &UserHolder{users: make(map[string]*domain.UserProfile)}
 }
 
-func (ptr *UserHolder) AddUser(userCreateReq *api.CreateUserRequest) *domain.UserProfile {
+func (ptr *UserHolder) AddUser(username string) *domain.UserProfile {
 	ptr.mutex.Lock()
 	defer ptr.mutex.Unlock()
 
-	if _, exists := ptr.users[userCreateReq.Username]; exists {
+	if _, exists := ptr.users[username]; exists {
 		return nil
 	}
 
 	randomUuid := uuid.New()
 
-	userProfile := &domain.UserProfile{Id: randomUuid.String(), Username: userCreateReq.Username}
+	userProfile := &domain.UserProfile{Id: randomUuid.String(), Username: username}
 
 	ptr.users[userProfile.Username] = userProfile
 

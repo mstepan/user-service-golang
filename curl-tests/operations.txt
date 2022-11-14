@@ -18,21 +18,21 @@ curl -v -X GET http://localhost:7070/api/v1/users/user-111 | jq
 ####################################################################################################
 # Delete user by username
 ####################################################################################################
-curl -v -X DELETE http://localhost:7070/api/v1/users/user-123 | jq
+curl -v -X DELETE http://localhost:7070/api/v1/users/user-123 | jq <-- NOT WORKING
 
 ####################################################################################################
 # Health
 ####################################################################################################
-curl -v -X GET http://localhost:7071/health | jq
+curl -v -X GET http://localhost:7071/health | jq <-- NOT WORKING
 
 ####################################################################################################
 # Metrics
 ####################################################################################################
 # Prometheus format
-curl -s -X GET http://localhost:7071/metrics
+curl -s -X GET http://localhost:7071/metrics <-- NOT WORKING
 
 # JSON format
-curl -v -X GET -H 'Accept: application/json' http://localhost:7071/metrics | jq
+curl -v -X GET -H 'Accept: application/json' http://localhost:7071/metrics | jq <-- NOT WORKING
 
 ####################################################################################################
 # Load testing
