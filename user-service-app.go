@@ -11,6 +11,8 @@ import (
 	"time"
 )
 
+const address = "0.0.0.0:7070"
+
 func main() {
 
 	var wait time.Duration
@@ -22,7 +24,7 @@ func main() {
 	http.Handle("/", routing)
 
 	server := &http.Server{
-		Addr: "0.0.0.0:7070",
+		Addr: address,
 		// Good practice to set timeouts to avoid Slowloris attacks.
 		WriteTimeout: time.Second * 15,
 		ReadTimeout:  time.Second * 15,
@@ -32,6 +34,7 @@ func main() {
 
 	// Run our server in a goroutine so that it doesn't block.
 	go func() {
+		log.Printf("Server will be started at %s\n", address)
 		if err := server.ListenAndServe(); err != nil {
 			log.Println(err)
 		}
