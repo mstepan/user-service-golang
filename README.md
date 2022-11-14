@@ -1,6 +1,7 @@
 # user-service REST example using Golang
 
-Use Go version 1.19 with modules.
+Use Go version `1.19` with modules.
+Use [Gorilla/mux](https://github.com/gorilla/mux) 
 
 # Build and run
 

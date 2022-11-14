@@ -5,7 +5,9 @@ import (
 	"encoding/json"
 	"flag"
 	"github.com/gorilla/mux"
-	"github.com/mstepan/user-service-golang/domain"
+	"github.com/mstepan/user-service-golang/api"
+	"github.com/mstepan/user-service-golang/domain_service"
+	"github.com/mstepan/user-service-golang/utils/http_utils"
 	"log"
 	"net/http"
 	"os"
@@ -15,10 +17,9 @@ import (
 
 const routPrefix = "/api/v1"
 
-func main() {
+var userHolder = domain_service.NewUserHolder()
 
-	// curl http://localhost:7070/api/v1/users/maksym | jq
-	// curl http://localhost:7070/api/v1/users/zorro | jq
+func main() {
 
 	var wait time.Duration
 	flag.DurationVar(&wait, "graceful-timeout", time.Second*15, "the duration for which the server gracefully wait for existing connections to finish - e.g. 15s or 1m")
@@ -26,7 +27,16 @@ func main() {
 
 	// configure all routing here
 	routing := mux.NewRouter()
-	routing.HandleFunc(routPrefix+"/users/{username:[a-zA-Z][\\w]{1,31}}", GetUserByUsername).
+
+	routing.HandleFunc(routPrefix+"/users", addNewUser).
+		Methods("POST").
+		Schemes("http")
+
+	routing.HandleFunc(routPrefix+"/users", getAllUsers).
+		Methods("GET").
+		Schemes("http")
+
+	routing.HandleFunc(routPrefix+"/users/{username:[a-zA-Z][\\w-]{1,31}}", getUserByUsername).
 		Methods("GET").
 		Schemes("http")
 
@@ -75,20 +85,54 @@ func main() {
 
 }
 
-func GetUserByUsername(respWriter http.ResponseWriter, req *http.Request) {
-	vars := mux.Vars(req)
-	respWriter.Header().Set("Content-Type", "application/json")
-	respWriter.WriteHeader(http.StatusOK)
+func addNewUser(respWriter http.ResponseWriter, req *http.Request) {
 
-	data, err := json.Marshal(&domain.UserProfile{Id: 133, Username: vars["username"]})
+	userReq := &api.CreateUserRequest{}
+
+	err := json.NewDecoder(req.Body).Decode(&userReq)
 
 	if err != nil {
-		log.Println("Can't properly marshal response")
-	} else {
-		_, err := respWriter.Write(data)
-		if err != nil {
-			log.Printf("Can't properly write reponse: %v\n", err)
-		}
+		respWriter.WriteHeader(http.StatusInternalServerError)
+		return
 	}
+
+	wasAdded := userHolder.AddUser(userReq)
+
+	if wasAdded {
+		respWriter.WriteHeader(http.StatusCreated)
+	} else {
+		respWriter.WriteHeader(http.StatusConflict)
+	}
+
+}
+
+func getAllUsers(respWriter http.ResponseWriter, req *http.Request) {
+	respWriter.Header().Set(http_utils.ApplicationJson())
+	respWriter.WriteHeader(http.StatusOK)
+}
+
+func getUserByUsername(respWriter http.ResponseWriter, req *http.Request) {
+	vars := mux.Vars(req)
+
+	userProfile := userHolder.GetUserByUsername(vars["username"])
+
+	if userProfile == nil {
+		respWriter.WriteHeader(http.StatusNotFound)
+		return
+	}
+
+	userProfileData, marshallErr := json.Marshal(userProfile)
+	if marshallErr != nil {
+		respWriter.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	_, writeErr := respWriter.Write(userProfileData)
+	if writeErr != nil {
+		respWriter.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	respWriter.WriteHeader(http.StatusOK)
 
 }
