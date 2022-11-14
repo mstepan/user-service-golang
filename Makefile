@@ -34,7 +34,7 @@ build: fmt lint
 .PHONY:build
 
 run: build
-	bin/app1
+	bin/$(binary_name)
 .PHONY:run
 
 #

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"flag"
 	"github.com/gorilla/mux"
+	"github.com/mstepan/user-service-golang/domain"
 	"log"
 	"net/http"
 	"os"
@@ -74,17 +75,12 @@ func main() {
 
 }
 
-type UserProfile struct {
-	Id       int    `json:"id"`
-	Username string `json:"username"`
-}
-
 func GetUserByUsername(respWriter http.ResponseWriter, req *http.Request) {
 	vars := mux.Vars(req)
 	respWriter.Header().Set("Content-Type", "application/json")
 	respWriter.WriteHeader(http.StatusOK)
 
-	data, err := json.Marshal(&UserProfile{Id: 133, Username: vars["username"]})
+	data, err := json.Marshal(&domain.UserProfile{Id: 133, Username: vars["username"]})
 
 	if err != nil {
 		log.Println("Can't properly marshal response")
