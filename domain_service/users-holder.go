@@ -1,9 +1,9 @@
 package domain_service
 
 import (
+	"github.com/google/uuid"
 	"github.com/mstepan/user-service-golang/api"
 	"github.com/mstepan/user-service-golang/domain"
-	"math/rand"
 	"sync"
 )
 
@@ -16,17 +16,21 @@ func NewUserHolder() *UserHolder {
 	return &UserHolder{users: make(map[string]*domain.UserProfile)}
 }
 
-func (ptr *UserHolder) AddUser(userProfile *api.CreateUserRequest) bool {
+func (ptr *UserHolder) AddUser(userCreateReq *api.CreateUserRequest) *domain.UserProfile {
 	ptr.mutex.Lock()
 	defer ptr.mutex.Unlock()
 
-	if _, exists := ptr.users[userProfile.Username]; exists {
-		return false
+	if _, exists := ptr.users[userCreateReq.Username]; exists {
+		return nil
 	}
 
-	ptr.users[userProfile.Username] = &domain.UserProfile{Id: rand.Intn(10000), Username: userProfile.Username}
+	randomUuid := uuid.New()
 
-	return true
+	userProfile := &domain.UserProfile{Id: randomUuid.String(), Username: userCreateReq.Username}
+
+	ptr.users[userProfile.Username] = userProfile
+
+	return userProfile
 }
 
 func (ptr *UserHolder) GetUserByUsername(username string) *domain.UserProfile {
@@ -34,4 +38,15 @@ func (ptr *UserHolder) GetUserByUsername(username string) *domain.UserProfile {
 	defer ptr.mutex.Unlock()
 
 	return ptr.users[username]
+}
+
+func (ptr *UserHolder) GetAllUsers() []*domain.UserProfile {
+
+	allUsers := make([]*domain.UserProfile, 0, len(ptr.users))
+
+	for _, userProfile := range ptr.users {
+		allUsers = append(allUsers, userProfile)
+	}
+
+	return allUsers
 }

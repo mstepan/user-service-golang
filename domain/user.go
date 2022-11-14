@@ -1,6 +1,6 @@
 package domain
 
 type UserProfile struct {
-	Id       int    `json:"id"`
+	Id       string `json:"id"`
 	Username string `json:"username"`
 }

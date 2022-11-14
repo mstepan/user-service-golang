@@ -96,19 +96,39 @@ func addNewUser(respWriter http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	wasAdded := userHolder.AddUser(userReq)
+	userProfile := userHolder.AddUser(userReq)
 
-	if wasAdded {
-		respWriter.WriteHeader(http.StatusCreated)
-	} else {
+	if userProfile == nil {
 		respWriter.WriteHeader(http.StatusConflict)
+
+	} else {
+		data, err := json.Marshal(userProfile)
+
+		if err != nil {
+			log.Println("Can't properly marshall UserProfile")
+			return
+		}
+
+		respWriter.WriteHeader(http.StatusCreated)
+		writeBodyOrError(respWriter, data)
 	}
 
 }
 
 func getAllUsers(respWriter http.ResponseWriter, req *http.Request) {
+
+	allUsers := userHolder.GetAllUsers()
+
+	data, err := json.Marshal(allUsers)
+
+	if err != nil {
+		respWriter.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
 	respWriter.Header().Set(http_utils.ApplicationJson())
 	respWriter.WriteHeader(http.StatusOK)
+	writeBodyOrError(respWriter, data)
 }
 
 func getUserByUsername(respWriter http.ResponseWriter, req *http.Request) {
@@ -127,12 +147,14 @@ func getUserByUsername(respWriter http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	_, writeErr := respWriter.Write(userProfileData)
+	respWriter.WriteHeader(http.StatusOK)
+	writeBodyOrError(respWriter, userProfileData)
+}
+
+func writeBodyOrError(respWriter http.ResponseWriter, data []byte) {
+	_, writeErr := respWriter.Write(data)
 	if writeErr != nil {
-		respWriter.WriteHeader(http.StatusInternalServerError)
+		log.Printf("Can't properly write response: %s", writeErr.Error())
 		return
 	}
-
-	respWriter.WriteHeader(http.StatusOK)
-
 }
