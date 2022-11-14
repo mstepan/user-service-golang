@@ -24,6 +24,10 @@ func NewRouting() *mux.Router {
 		Methods("GET").
 		Schemes("http")
 
+	routing.HandleFunc(contextPath+"/users/count", getUsersCount).
+		Methods("GET").
+		Schemes("http")
+
 	routing.HandleFunc(contextPath+"/users/{username:[a-zA-Z][\\w-]{1,31}}", getUserByUsername).
 		Methods("GET").
 		Schemes("http")
@@ -39,55 +43,64 @@ type CreateUserRequest struct {
 	Username string
 }
 
-func addNewUser(respWriter http.ResponseWriter, req *http.Request) {
+func addNewUser(resp http.ResponseWriter, req *http.Request) {
 
 	userReq := &CreateUserRequest{}
 
 	err := json.NewDecoder(req.Body).Decode(&userReq)
 
 	if err != nil {
-		respWriter.WriteHeader(http.StatusInternalServerError)
+		resp.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	userProfile := userHolder.AddUser(userReq.Username)
 
 	if userProfile == nil {
-		respWriter.WriteHeader(http.StatusConflict)
+		resp.WriteHeader(http.StatusConflict)
 	} else {
-		http_utils.WriteJsonBody(respWriter, http.StatusCreated, userProfile)
+		http_utils.WriteJsonBody(resp, http.StatusCreated, userProfile)
 	}
 }
 
-func getAllUsers(respWriter http.ResponseWriter, req *http.Request) {
+func getAllUsers(resp http.ResponseWriter, req *http.Request) {
 
 	allUsers := userHolder.GetAllUsers()
 
-	http_utils.WriteJsonBody(respWriter, http.StatusOK, allUsers)
+	http_utils.WriteJsonBody(resp, http.StatusOK, allUsers)
 }
 
-func getUserByUsername(respWriter http.ResponseWriter, req *http.Request) {
+type counterResponse struct {
+	Count int `json:"count"`
+}
+
+func getUsersCount(resp http.ResponseWriter, req *http.Request) {
+	usersCount := userHolder.GetUsersCount()
+	http_utils.WriteJsonBody(resp, http.StatusOK, &counterResponse{Count: usersCount})
+}
+
+func getUserByUsername(resp http.ResponseWriter, req *http.Request) {
 	vars := mux.Vars(req)
 
 	userProfile := userHolder.GetUserByUsername(vars["username"])
 
 	if userProfile == nil {
-		respWriter.WriteHeader(http.StatusNotFound)
+		resp.WriteHeader(http.StatusNotFound)
 		return
 	}
 
-	http_utils.WriteJsonBody(respWriter, http.StatusOK, userProfile)
+	http_utils.WriteJsonBody(resp, http.StatusOK, userProfile)
 }
 
-func deleteUserByUsername(respWriter http.ResponseWriter, req *http.Request) {
+func deleteUserByUsername(resp http.ResponseWriter, req *http.Request) {
 	vars := mux.Vars(req)
 
 	wasDeleted := userHolder.DeleteUserByUsername(vars["username"])
 
 	if wasDeleted {
-		respWriter.WriteHeader(http.StatusNoContent)
+		resp.WriteHeader(http.StatusNoContent)
 		return
 	}
 
-	respWriter.WriteHeader(http.StatusNotFound)
+	resp.WriteHeader(http.StatusNotFound)
 }

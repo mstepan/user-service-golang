@@ -40,6 +40,8 @@ func (ptr *UserHolder) GetUserByUsername(username string) *domain.UserProfile {
 }
 
 func (ptr *UserHolder) GetAllUsers() []*domain.UserProfile {
+	ptr.mutex.Lock()
+	defer ptr.mutex.Unlock()
 
 	allUsers := make([]*domain.UserProfile, 0, len(ptr.users))
 
@@ -60,4 +62,11 @@ func (ptr *UserHolder) DeleteUserByUsername(username string) bool {
 	}
 
 	return false
+}
+
+func (ptr *UserHolder) GetUsersCount() int {
+	ptr.mutex.Lock()
+	defer ptr.mutex.Unlock()
+
+	return len(ptr.users)
 }

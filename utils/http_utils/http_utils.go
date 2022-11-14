@@ -6,10 +6,6 @@ import (
 	"net/http"
 )
 
-func ApplicationJson() (string, string) {
-	return "Content-Type", "application/json"
-}
-
 func WriteJsonBody(respWriter http.ResponseWriter, statusCode int, obj interface{}) {
 	// convert object to JSON
 	data, err := json.Marshal(obj)
@@ -21,6 +17,7 @@ func WriteJsonBody(respWriter http.ResponseWriter, statusCode int, obj interface
 	}
 
 	// write status and response body
+	respWriter.Header().Set("Content-Type", "application/json")
 	respWriter.WriteHeader(statusCode)
 	_, writeErr := respWriter.Write(data)
 	if writeErr != nil {
