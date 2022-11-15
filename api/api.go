@@ -5,10 +5,18 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/mstepan/user-service-golang/domain/service"
 	"github.com/mstepan/user-service-golang/utils/http_utils"
+	"log"
 	"net/http"
+	"os"
 )
 
-const contextPath = "/api/v1"
+const (
+	contextPath = "/api/v1"
+	get         = "GET"
+	post        = "POST"
+	delete      = "DELETE"
+	httpScheme  = "http"
+)
 
 var userHolder = service.NewUserHolder()
 
@@ -16,27 +24,46 @@ func NewRouting() *mux.Router {
 	// configure all routing here
 	routing := mux.NewRouter()
 
+	// Middlewares
+	if isLoggingEnabled() {
+		routing.Use(loggingMiddleware)
+	}
+
+	// REST apis
 	routing.HandleFunc(contextPath+"/users", addNewUser).
-		Methods("POST").
-		Schemes("http")
+		Methods(post).
+		Schemes(httpScheme)
 
 	routing.HandleFunc(contextPath+"/users", getAllUsers).
-		Methods("GET").
-		Schemes("http")
+		Methods(get).
+		Schemes(httpScheme)
 
 	routing.HandleFunc(contextPath+"/users/count", getUsersCount).
-		Methods("GET").
-		Schemes("http")
+		Methods(get).
+		Schemes(httpScheme)
 
 	routing.HandleFunc(contextPath+"/users/{username:[a-zA-Z][\\w-]{1,31}}", getUserByUsername).
-		Methods("GET").
-		Schemes("http")
+		Methods(get).
+		Schemes(httpScheme)
 
 	routing.HandleFunc(contextPath+"/users/{username:[a-zA-Z][\\w-]{1,31}}", deleteUserByUsername).
-		Methods("DELETE").
-		Schemes("http")
+		Methods(delete).
+		Schemes(httpScheme)
 
 	return routing
+}
+
+func isLoggingEnabled() bool {
+	_, exist := os.LookupEnv("LOGGING")
+	return exist
+}
+
+func loggingMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(resp http.ResponseWriter, req *http.Request) {
+		log.Printf("%s %s", req.Method, req.RequestURI)
+		// Call the next handler, which can be another middleware in the chain, or the final handler.
+		next.ServeHTTP(resp, req)
+	})
 }
 
 type CreateUserRequest struct {

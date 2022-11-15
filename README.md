@@ -1,9 +1,9 @@
 # user-service REST example using Golang
 
 Use Go version `1.19` with modules.
-Use [Gorilla/mux](https://github.com/gorilla/mux) 
+Use [Gorilla/mux](https://github.com/gorilla/mux)
 
-# Build and run
+## Build and run
 
 * set up all compilation time dependencies 
 ```bash
@@ -29,3 +29,9 @@ make release
 ```bash
 make clean
 ```
+
+## Golang references
+
+[Effective Go](https://go.dev/doc/effective_go)
+
+[Go by Example](https://gobyexample.com/)
